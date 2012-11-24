@@ -16,7 +16,7 @@ module.exports = function () {
 
     db.hooks = {
       post: function (posthook) {
-        posthooks.push(posthook)
+        db.on('hooks:post', posthook)
         return db
       },
       pre: function (hook) {
@@ -29,9 +29,7 @@ module.exports = function () {
     //POST HOOKS
 
     function each (e) {
-      posthooks.forEach(function (h) {
-        h(e)
-      })
+      db.emit('hooks:post', e)
     }
 
     db.on('put', function (key, val) {
@@ -70,7 +68,7 @@ module.exports = function () {
     }
 
     db._db.del = function (key, opts, cb) {
-      var batch =[{key: key, type: 'del'}]
+      var batch = [{key: key, type: 'del'}]
       return callHooks(batch, opts, cb)
     }
 
