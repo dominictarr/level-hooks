@@ -44,10 +44,9 @@ rimraf(dir, function () {
     var next = mac(function () {
       console.log('test', n)
       if(--n) return
-      console.log('go', n)
 
       db.get('~seq', mac(function (err, val) {
-        console.log(''+val)
+        console.log('seq=', ''+val)
         assert.equal(Number(''+val), 3)
         db.readStream({start: '~log~', end: '~log~~'})
           .on('data', function (data) {
