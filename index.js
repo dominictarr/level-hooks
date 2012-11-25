@@ -48,12 +48,12 @@ module.exports = function () {
     var del = db.del
     var batch = db.batch
 
-    function callHooks (ch, opts, cb) {
+    function callHooks (isBatch, ch, opts, cb) {
       for (var i in prehooks) {
         ch = prehooks[i](ch)
         if(!ch) return cb(new Error('vetoed'))
       }
-      if(ch.length == 1) {
+      if(ch.length == 1 && !isBatch) {
         var change = ch.shift()
         return change.type == 'put' 
           ? put.call(db, change.key, change.value, opts, cb) 
@@ -64,16 +64,16 @@ module.exports = function () {
 
     db.put = function (key, value, opts, cb ) {
       var batch = [{key: key, value: value, type: 'put'}]
-      return callHooks(batch, opts, cb)
+      return callHooks(false, batch, opts, cb)
     }
 
     db.del = function (key, opts, cb) {
       var batch = [{key: key, type: 'del'}]
-      return callHooks(batch, opts, cb)
+      return callHooks(false, batch, opts, cb)
     }
 
     db.batch = function (batch, opts, cb) {
-      return callHooks(batch, opts, cb)
+      return callHooks(true, batch, opts, cb)
     }
   }
 }
