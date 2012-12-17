@@ -53,6 +53,11 @@ module.exports = function () {
         ch = prehooks[i](ch)
         if(!ch) return cb(new Error('vetoed'))
       }
+
+      ch = ch.filter(function (e) {
+        return e && e.type //filter out empty items
+      })
+
       if(ch.length == 1 && !isBatch) {
         var change = ch.shift()
         return change.type == 'put' 
