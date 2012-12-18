@@ -29,7 +29,8 @@ module.exports = function () {
     //POST HOOKS
 
     function each (e) {
-      db.emit('hooks:post', e)
+      if(e && e.type)
+        db.emit('hooks:post', e)
     }
 
     db.on('put', function (key, val) {
