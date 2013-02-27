@@ -19,22 +19,20 @@ rimraf(dir, function () {
 
     use(db)
     .use(hooks())
-    .hooks.pre(mac(function (ch, add) {
+    .hooks.pre(/^\w/, mac(function (ch, add) {
       //iterate backwards so you can push without breaking stuff.
       var key = ch.key
-      if(key < '~') {
-        add({
-          type: 'put', 
-          key: new Buffer('~log~'+ ++SEQ),
-          value: new Buffer(JSON.stringify({
-            type: ch.type, 
-            key: key.toString(), 
-            time: Date.now()
-          }))
-        })
+      add({
+        type: 'put', 
+        key: new Buffer('~log~'+ ++SEQ),
+        value: new Buffer(JSON.stringify({
+          type: ch.type, 
+          key: key.toString(), 
+          time: Date.now()
+        }))
+      })
+      add({type: 'put', key: new Buffer('~seq'), value: new Buffer(SEQ.toString())})
 
-        add({type: 'put', key: new Buffer('~seq'), value: new Buffer(SEQ.toString())})
-      }
     }).atLeast(1))
 
     var n = 3

@@ -13,14 +13,13 @@ rimraf(dir, function () {
     
     hooks()(db)
     var _batch = []
-    db.hooks.pre(mac(function (ch, add) {
+    //hook keys that start with a word character
+    db.hooks.pre(/^\w/, mac(function (ch, add) {
       
-      if(ch.key != 'h') {
-        _batch.push(ch)
-        var a
-        add(a = {key: 'h', value: 'hello', type: 'put'})
-        _batch.push(a)
-      }
+      _batch.push(ch)
+      var a
+      add(a = {key: '~h', value: 'hello', type: 'put'})
+      _batch.push(a)
     }).atLeast(1))
 
     //assert that it really became a batch
