@@ -11,7 +11,7 @@ var dir ='/tmp/map-reduce-intercept-test'
 rimraf(dir, function () {
   levelup(dir, {createIfMissing: true}, function (err, db) {
     
-    hooks()(db)
+    hooks(db)
     var _batch = []
     //hook keys that start with a word character
     db.hooks.pre(/^\w/, mac(function (ch, add) {

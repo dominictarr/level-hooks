@@ -1,8 +1,7 @@
 var rimraf  = require('rimraf')
 var levelup = require('levelup')
 
-var use     = require('../use')
-var hooks   = require('..')
+var hooks   = require('../')
 
 var assert  = require('assert')
 var mac     = require('macgyver')().autoValidate()
@@ -17,9 +16,10 @@ rimraf(dir, function () {
     var SEQ = 0
     var bucket = Bucket('prehook')
 
-    use(db)
-    .use(hooks())
-    .hooks.pre(/^\w/, mac(function (ch, add) {
+    hooks(db)
+
+
+    db.hooks.pre(/^\w/, mac(function (ch, add) {
       //iterate backwards so you can push without breaking stuff.
       var key = ch.key
       add({
