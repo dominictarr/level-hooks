@@ -23,6 +23,21 @@ module.exports = function (db) {
         )
     }
 
+    function checker(range) {
+      if ('string' === typeof range)
+        return function (key) {
+          return key.indexOf(range) == 0
+        }
+      else if(range instanceof RegExp)
+        return function (key) {
+          return range.test(key)
+        }
+      else if('object' === typeof range)
+        return function (key) {
+          return key >= range.start && key <= range.end
+        }
+    }
+
     db.hooks = {
       post: function (hook) {
         db.on('hooks:post', hook)
@@ -30,7 +45,7 @@ module.exports = function (db) {
       },
       pre: function (prefix, hook) {
         if(!hook) hook = prefix, prefix = ''
-        prehooks.push({prefix: getPrefix(prefix), hook: hook})
+        prehooks.push({test: checker(prefix), hook: hook})
         return db
       },
       posthooks: posthooks,
@@ -64,13 +79,12 @@ module.exports = function (db) {
 
       b.forEach(function hook(e, i) {
         prehooks.forEach(function (h) {
-          if(e.key.indexOf(h.prefix) == 0)
+          if(h.test(e.key))
             h.hook(e, function (ch, db) {
               if(ch === false)
                 return delete b[i]
               var prefix = getPrefix(db) || h.prefix || ''
               ch.key = prefix + ch.key
-              console.log('batch - add', ch)
               b.push(ch)
               hook(ch, b.length - 1)            
             })
