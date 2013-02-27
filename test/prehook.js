@@ -19,24 +19,22 @@ rimraf(dir, function () {
 
     use(db)
     .use(hooks())
-    .hooks.pre(mac(function (batch) {
+    .hooks.pre(mac(function (ch, add) {
       //iterate backwards so you can push without breaking stuff.
-      for(var i = batch.length - 1; i >= 0; --i) {
-        var ch = batch[i]
-        var key = ch.key
-        if(key < '~')
-          batch.push({
-            type: 'put', 
-            key: new Buffer('~log~'+ ++SEQ),
-            value: new Buffer(JSON.stringify({
-              type: ch.type, 
-              key: key.toString(), 
-              time: Date.now()
-            }))
-          })
+      var key = ch.key
+      if(key < '~') {
+        add({
+          type: 'put', 
+          key: new Buffer('~log~'+ ++SEQ),
+          value: new Buffer(JSON.stringify({
+            type: ch.type, 
+            key: key.toString(), 
+            time: Date.now()
+          }))
+        })
+
+        add({type: 'put', key: new Buffer('~seq'), value: new Buffer(SEQ.toString())})
       }
-      batch.push({type: 'put', key: new Buffer('~seq'), value: new Buffer(SEQ.toString())})
-      return batch
     }).atLeast(1))
 
     var n = 3

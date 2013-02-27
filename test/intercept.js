@@ -12,13 +12,16 @@ rimraf(dir, function () {
   levelup(dir, {createIfMissing: true}, function (err, db) {
     
     hooks()(db)
-    var _batch
-    db.hooks.pre(mac(function (batch) {
-      //iterate backwards so you can push without breaking stuff.
-      batch.push({key: 'h', value: 'hello', type: 'put'})
-      //turn this into a batch
-      return _batch = batch
-    }).once())
+    var _batch = []
+    db.hooks.pre(mac(function (ch, add) {
+      
+      if(ch.key != 'h') {
+        _batch.push(ch)
+        var a
+        add(a = {key: 'h', value: 'hello', type: 'put'})
+        _batch.push(a)
+      }
+    }).atLeast(1))
 
     //assert that it really became a batch
     db.on('batch', mac(function (batch) {
