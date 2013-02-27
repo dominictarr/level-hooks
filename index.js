@@ -36,6 +36,8 @@ module.exports = function (db) {
         return function (key) {
           return key >= range.start && key <= range.end
         }
+      else if('function' === typeof range)
+        return range
     }
 
     db.hooks = {
