@@ -39,7 +39,8 @@ module.exports = function (db) {
 
   db.hooks = {
     post: function (hook) {
-      db.on('hooks:post', hook)
+      if(!hook) hook = prefix, prefix = ''
+      posthooks.push({test: checker(prefix), hook: hook})
       return db
     },
     pre: function (prefix, hook) {
@@ -54,8 +55,11 @@ module.exports = function (db) {
   //POST HOOKS
 
   function each (e) {
-    if(e && e.type)
-      db.emit('hooks:post', e)
+    if(e && e.type) {
+      posthooks.forEach(function (h) {
+        if(h.test(e.key)) h.hook(e)
+      })
+    }
   }
 
   db.on('put', function (key, val) {
