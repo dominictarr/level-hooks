@@ -27,33 +27,18 @@ levelup(file, {createIfMissing: true}, function (err, db) {
   //install hooks onto db.
   hooks(db)
 
-  db.hooks.pre(function (change, add) {
-
-    //batch is the same format as the arguments to db.batch.
-    //it may be mutated like this to atomically add operations.
-    
-    //example, add a log to record every put operation.
-      if(!/~log-/.test(e.key.toString())
-        add({type: 'put', key: '~log-'+timestamp()+'-'+e.type, value: e.key})
-
-    //you can also remove elements.
-    //if there is only one element,
-    //hooks will turn it into an put/del operation, 
-    //not use the batch function.
-
+  db.hooks.pre({start: '', end: '~'}, function (change, add) {
+    //change is same pattern as the an element in the batch array.
+    //add a log to record every put operation.
+    add({type: 'put', key: '~log-'+timestamp()+'-'+e.type, value: e.key})
   })
 
   //add a hook that responds after an operation has completed.
-
-  //same pattern as the an element in the batch array.
-  db.hooks.post(function (err, ch) {
-    console.log(ch)
+  db.hooks.post(function (ch) {
     //{type: 'put'|'del', key: ..., value: ...}
   })
 
-
 })
-
 ```
 
 Used by [map-reduce](https://github.com/dominictarr/map-reduce) 
