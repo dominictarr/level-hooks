@@ -38,7 +38,7 @@ module.exports = function (db) {
   }
 
   db.hooks = {
-    post: function (hook) {
+    post: function (prefix, hook) {
       if(!hook) hook = prefix, prefix = ''
       posthooks.push({test: checker(prefix), hook: hook})
       return db
