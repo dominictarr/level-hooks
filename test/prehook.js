@@ -1,7 +1,7 @@
 var rimraf  = require('rimraf')
 var levelup = require('levelup')
 
-var hooks   = require('../')
+var Hooks   = require('../')
 
 var assert  = require('assert')
 var mac     = require('macgyver')().autoValidate()
@@ -11,12 +11,13 @@ var Bucket  = require('range-bucket')
 var dir ='/tmp/map-reduce-prehook-test'
 
 rimraf(dir, function () {
-  levelup(dir, {createIfMissing: true}, function (err, db) {
+  levelup(dir, function (err, db) {
+    if(err) throw err
 
     var SEQ = 0
     var bucket = Bucket('prehook')
 
-    hooks(db)
+    Hooks(db)
 
 
     db.hooks.pre(/^\w/, mac(function (ch, add) {
