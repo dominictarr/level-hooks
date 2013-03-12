@@ -1,6 +1,5 @@
 
-
-//this will be used by queue.
+var ranges = require('string-range')
 
 module.exports = function (db) {
 
@@ -20,23 +19,6 @@ module.exports = function (db) {
       )
   }
 
-  function checker(range) {
-    if ('string' === typeof range)
-      return function (key) {
-        return key.indexOf(range) == 0
-      }
-    else if(range instanceof RegExp)
-      return function (key) {
-        return range.test(key)
-      }
-    else if('object' === typeof range)
-      return function (key) {
-        return key >= range.start && key <= range.end
-      }
-    else if('function' === typeof range)
-      return range
-  }
-
   function remover (array, item) {
     return function () {
       var i = array.indexOf(item)
@@ -49,13 +31,13 @@ module.exports = function (db) {
   db.hooks = {
     post: function (prefix, hook) {
       if(!hook) hook = prefix, prefix = ''
-      var h = {test: checker(prefix), hook: hook}
+      var h = {test: ranges.checker(prefix), hook: hook}
       posthooks.push(h)
       return remover(posthooks, h)
     },
     pre: function (prefix, hook) {
       if(!hook) hook = prefix, prefix = ''
-      var h = {test: checker(prefix), hook: hook}
+      var h = {test: ranges.checker(prefix), hook: hook}
       prehooks.push(h)
       return remover(prehooks, h)
     },
