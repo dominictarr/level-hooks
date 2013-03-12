@@ -37,16 +37,27 @@ module.exports = function (db) {
       return range
   }
 
+  function remover (array, item) {
+    return function () {
+      var i = array.indexOf(item)
+      if(!~i) return false        
+      array.splice(i, 1)
+      return true
+    }
+  }
+
   db.hooks = {
     post: function (prefix, hook) {
       if(!hook) hook = prefix, prefix = ''
-      posthooks.push({test: checker(prefix), hook: hook})
-      return db
+      var h = {test: checker(prefix), hook: hook}
+      posthooks.push(h)
+      return remover(posthooks, h)
     },
     pre: function (prefix, hook) {
       if(!hook) hook = prefix, prefix = ''
-      prehooks.push({test: checker(prefix), hook: hook})
-      return db
+      var h = {test: checker(prefix), hook: hook}
+      prehooks.push(h)
+      return remover(prehooks, h)
     },
     posthooks: posthooks,
     prehooks: prehooks
@@ -82,15 +93,34 @@ module.exports = function (db) {
 
     b.forEach(function hook(e, i) {
       prehooks.forEach(function (h) {
-        if(h.test(e.key))
-          h.hook(e, function (ch, db) {
-            if(ch === false)
-              return delete b[i]
-            var prefix = getPrefix(db) || h.prefix || ''
-            ch.key = prefix + ch.key
-            b.push(ch)
-            hook(ch, b.length - 1)            
-          })
+        if(h.test(e.key)) {
+          //optimize this?
+          //maybe faster to not create a new object each time?
+          //have one object and expose scope to it?
+          var context = {
+            add: function (ch, db) {
+              if(ch === false)
+                return delete b[i]
+              var prefix = getPrefix(db) || h.prefix || ''
+              ch.key = prefix + ch.key
+              b.push(ch)
+              hook(ch, b.length - 1)
+              return this
+            },
+            put: function (ch, db) {
+              if('object' === typeof cb) ch.type = 'put'
+              return this.add(ch, db)
+            },
+            del: function (ch, db) {
+              if('object' === typeof cb) ch.type = 'del'
+              return this.add(ch, db)
+            },
+            veto: function () {
+              return this.add(false)
+            }
+          }
+          h.hook.call(context, e, context.add)
+        }
       })
     })
 
