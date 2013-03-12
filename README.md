@@ -46,7 +46,7 @@ to make map-reduce durable across crashes!
 
 ## API
 
-### db.hooks.pre (range?, hook(change, add(change, prefix?)))
+### rm = db.hooks.pre (range?, hook(change, add(change, prefix?)))
 
 If `prefix` is a `string` or `object` that defines the range the pre-hook triggers on.
 If `prefix' is a string, then the hook only triggers on keys that _start_ with that 
@@ -62,10 +62,14 @@ to any keys you add.
 
 To veto (remove) the current change call `add(false)`.
 
-### db.hooks.post (range?, hook)
+`db.hooks.pre` returns a function that will remove the hook when called.
+
+### rm = db.hooks.post (range?, hook)
 
 Post hooks do not offer any chance to change the value.
 but do take a range option, just like `pre`
+
+`db.hooks.post` returns a function that will remove the hook when called.
 
 ## License
 
