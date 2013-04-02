@@ -75,7 +75,7 @@ module.exports = function (db) {
 
     b.forEach(function hook(e, i) {
       prehooks.forEach(function (h) {
-        if(h.test(e.key)) {
+        if(h.test(String(e.key))) {
           //optimize this?
           //maybe faster to not create a new object each time?
           //have one object and expose scope to it?
