@@ -45,7 +45,7 @@ rimraf(dir, function () {
       db.get('~seq', mac(function (err, val) {
         console.log('seq=', ''+val)
         assert.equal(Number(''+val), 3)
-        db.readStream({start: '~log~', end: '~log~~'})
+        db.createReadStream({start: '~log~', end: '~log~~'})
           .on('data', function (data) {
             console.log(data.key.toString(), data.value.toString())
           })
