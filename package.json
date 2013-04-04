@@ -9,7 +9,7 @@
   },
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://bit.ly/dominictarr)",
   "dependencies": {
-    "string-range": "~1.1"
+    "string-range": "~1.2"
   },
   "devDependencies": {
     "levelup": "~0.6",
