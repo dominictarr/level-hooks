@@ -84,8 +84,8 @@ module.exports = function (db) {
               if(ch === false)
                 return delete b[i]
               var prefix = (
-                getPrefix(db) || 
                 getPrefix(ch.prefix) || 
+                getPrefix(db) || 
                 h.prefix || ''
               )
               ch.key = prefix + ch.key
