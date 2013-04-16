@@ -72,7 +72,7 @@ module.exports = function (db) {
   var batch = db.batch
 
   function callHooks (isBatch, b, opts, cb) {
-
+    try {
     b.forEach(function hook(e, i) {
       prehooks.forEach(function (h) {
         if(h.test(String(e.key))) {
@@ -89,6 +89,10 @@ module.exports = function (db) {
                 h.prefix || ''
               )
               ch.key = prefix + ch.key
+              if(h.test(String(ch.key))) {
+                //this usually means a stack overflow.
+                throw new Error('prehook cannot insert into own range')
+              }
               b.push(ch)
               hook(ch, b.length - 1)
               return this
@@ -109,7 +113,9 @@ module.exports = function (db) {
         }
       })
     })
-
+    } catch (err) {
+      return (cb || opts)(err)
+    }
     b = b.filter(function (e) {
       return e && e.type //filter out empty items
     })
