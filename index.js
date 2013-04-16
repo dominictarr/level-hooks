@@ -83,7 +83,11 @@ module.exports = function (db) {
             add: function (ch, db) {
               if(ch === false)
                 return delete b[i]
-              var prefix = getPrefix(db) || h.prefix || ''
+              var prefix = (
+                getPrefix(db) || 
+                getPrefix(ch.prefix) || 
+                h.prefix || ''
+              )
               ch.key = prefix + ch.key
               b.push(ch)
               hook(ch, b.length - 1)
