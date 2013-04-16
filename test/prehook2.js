@@ -42,8 +42,9 @@ rimraf(dir, function () {
       add({
         type: 'put', 
         key: ++LOGSEQ,
-        value: Date.now()
-      }, '~LOGSEQ~')
+        value: Date.now(),
+        prefix: '~LOGSEQ~'
+      })
 
     }).atLeast(1))
 
