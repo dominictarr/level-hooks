@@ -30,7 +30,7 @@ levelup(file, {createIfMissing: true}, function (err, db) {
   db.hooks.pre({start: '', end: '~'}, function (change, add) {
     //change is same pattern as the an element in the batch array.
     //add a log to record every put operation.
-    add({type: 'put', key: '~log-'+timestamp()+'-'+e.type, value: e.key})
+    add({type: 'put', key: '~log-'+timestamp()+'-'+change.type, value: change.key})
   })
 
   //add a hook that responds after an operation has completed.
