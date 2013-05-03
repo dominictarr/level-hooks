@@ -1,4 +1,3 @@
-
 var ranges = require('string-range')
 
 module.exports = function (db) {
@@ -81,6 +80,9 @@ module.exports = function (db) {
           //have one object and expose scope to it?
           var context = {
             add: function (ch, db) {
+              if(typeof ch === 'undefined') {
+                return this
+              }
               if(ch === false)
                 return delete b[i]
               var prefix = (
