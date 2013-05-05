@@ -82,13 +82,21 @@ module.exports = function (db) {
   function callHooks (isBatch, b, opts, cb) {
     if(!cb)
       cb = opts, opts = {}
+
+    //ASYNC HOOKS
     var toHook = [], toLock = [], n = 0, locked = false
+
+    //skip this if there are no async hooks.
+    if(!asynchooks.length)
+      return n=1, sync()
 
     b.forEach(function (e) {
       asynchooks.forEach(function (h) {
-        console.log(h, e.key, h.test(String(e.key)))
         if(h.test(String(e.key))) {
           locked = true
+          // should I lock the whole batch?
+          // or just the keys that have asynchooks?
+          // just locking the hooked keys for now...
           toLock.push(e.key)
           toHook.push(function (cb) {
             h.hook(e, cb)
@@ -100,7 +108,6 @@ module.exports = function (db) {
 
     if(toLock.length)
       lock(toLock, function (release) {
-        console.log('aquired lock')
         //release the lock when the callback is called
         //after the batch is processed!
         cb = release(cb)
@@ -109,11 +116,11 @@ module.exports = function (db) {
     else
       n=1, sync()
 
+    //SYNC HOOKS
+
     function sync () {
-      console.log('sync hooks', n)
       if(--n) return
 
-      console.log('pre')
       try {
       b.forEach(function hook(e, i) {
         prehooks.forEach(function (h) {
