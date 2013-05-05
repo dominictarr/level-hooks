@@ -23,7 +23,7 @@ rimraf(dir, function () {
     db.hooks.pre(/^\w/, mac(function (ch, add) {
       //iterate backwards so you can push without breaking stuff.
       var key = ch.key
-      add({
+      add([{
         type: 'put', 
         key: new Buffer('~log~'+ ++SEQ),
         value: new Buffer(JSON.stringify({
@@ -31,8 +31,13 @@ rimraf(dir, function () {
           key: key.toString(), 
           time: Date.now()
         }))
-      })
-      add({type: 'put', key: new Buffer('~seq'), value: new Buffer(SEQ.toString())})
+      },
+      {
+        type: 'put',
+        key: new Buffer('~seq'),
+        value: new Buffer(SEQ.toString())
+      }
+      ])
 
     }).atLeast(1))
 

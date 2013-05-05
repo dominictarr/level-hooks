@@ -22,16 +22,17 @@ rimraf(dir, function () {
     db.hooks.pre(/^\w/, mac(function (ch, add) {
       //iterate backwards so you can push without breaking stuff.
       var key = ch.key
-      add({
+      add([{
         type: 'put', 
         key: ++SEQ,
-        value: key.toString()
-      }, '~log~')
-
-      add({
-        type: 'put', key: new Buffer('~seq'),
+        value: key.toString(),
+        prefix: '~log~'
+      },
+      {
+        type: 'put',
+        key: new Buffer('~seq'),
         value: new Buffer(SEQ.toString())
-      })
+      }])
 
     }).atLeast(1))
 
