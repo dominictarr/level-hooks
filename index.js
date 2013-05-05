@@ -98,53 +98,71 @@ module.exports = function (db) {
 
   function callHooks (isBatch, b, opts, cb) {
     //iterate over the batch in parallel
+    //WHERE TO PUT LOCKS?
+    //THIS ATTEMPT IS FAIL BECAUSE IT
+    //CAN'T DO LOCKS WELL.
     paraEach(b, function (e, i, done) {
+      var n = 0, hooked = false
       ;(function hook (e, i) {
         //but do each hook in series...
         prehooks.forEach(function (h) {
           if(h.test(String(e.key))) {
-            //optimize this?
-            //maybe faster to not create a new object each time?
-            //have one object and expose scope to it?
-            var context = {
-              add: function (ch, db) {
-                if(typeof ch === 'undefined') {
-                  return this
-                }
+            n ++; hooked = true
+
+            var async = false, _async = false, once = false
+            function add (ch, db) {
+              if(once) throw new Error('*must not* call add more than once')
+              once = true
+
+              if(async != _async)
+                throw new Error('must return false if async')
+
+              if(typeof ch === 'undefined')
+                return next()
+
+              function addOne (ch) {
                 if(ch === false)
                   return delete b[i]
+
                 var prefix = (
                   getPrefix(ch.prefix) || 
                   getPrefix(db) || 
                   h.prefix || ''
                 )
+
                 ch.key = prefix + ch.key
                 if(h.test(String(ch.key))) {
-                  //this usually means a stack overflow.
+                  // This usually means a stack overflow.
+                  // so lets just prevent it all-together
+                  // if you want to alter the current item,
+                  // just mutate it.
                   throw new Error('prehook cannot insert into own range')
                 }
+
                 b.push(ch)
                 hook(ch, b.length - 1)
-                return this
-              },
-              put: function (ch, db) {
-                if('object' === typeof ch) ch.type = 'put'
-                return this.add(ch, db)
-              },
-              del: function (ch, db) {
-                if('object' === typeof ch) ch.type = 'del'
-                return this.add(ch, db)
-              },
-              veto: function () {
-                return this.add(false)
               }
+
+              if(Array.isArray(ch)) ch.forEach(addOne)
+              else                  addOne(ch)
+
+              next()
             }
-            h.hook.call(context, e, context.add)
+
+            async = h.hook.call(null, e, add)
+            _async = true
+            if(!async) next()
           }
         })
         console.log('DONE', i)
       })(e, i)
-     done()
+      if(!hooked) node()
+      
+      function next() {
+        if(--n) return
+        done()
+      }
+
     }, function (err) {
       if(err)
         return (cb || opts)(err)
