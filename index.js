@@ -100,11 +100,11 @@ module.exports = function (db) {
               return this
             },
             put: function (ch, db) {
-              if('object' === typeof cb) ch.type = 'put'
+              if('object' === typeof ch) ch.type = 'put'
               return this.add(ch, db)
             },
             del: function (ch, db) {
-              if('object' === typeof cb) ch.type = 'del'
+              if('object' === typeof ch) ch.type = 'del'
               return this.add(ch, db)
             },
             veto: function () {
