@@ -22,27 +22,52 @@ var levelup   = require('levelup')
 var timestamp = require('monotonic-timestamp')
 var hooks     = require('level-hooks')
 
-levelup(file, {createIfMissing: true}, function (err, db) {
+var db = levelup(file)
 
-  //install hooks onto db.
-  hooks(db)
+//install hooks onto db.
+hooks(db)
 
-  db.hooks.pre({start: '', end: '~'}, function (change, add) {
-    //change is same pattern as the an element in the batch array.
-    //add a log to record every put operation.
-    add({type: 'put', key: '~log-'+timestamp()+'-'+change.type, value: change.key})
-  })
+db.hooks.pre({start: '', end: '~'}, function (change, add) {
+  //change is same pattern as the an element in the batch array.
+  //add a log to record every put operation.
+  add({type: 'put', key: '~log-'+timestamp()+'-'+change.type, value: change.key})
+})
 
-  //add a hook that responds after an operation has completed.
-  db.hooks.post(function (ch) {
-    //{type: 'put'|'del', key: ..., value: ...}
-  })
-
+//add a hook that responds after an operation has completed.
+db.hooks.post(function (ch) {
+  //{type: 'put'|'del', key: ..., value: ...}
 })
 ```
 
 Used by [map-reduce](https://github.com/dominictarr/map-reduce) 
 to make map-reduce durable across crashes!
+
+## Async Example
+
+``` js
+var levelup   = require('levelup')
+var timestamp = require('monotonic-timestamp')
+var hooks     = require('level-hooks')
+
+var db = levelup(file)
+
+//install hooks onto db.
+hooks(db)
+
+db.hooks.pre('counter!', function (op, done) {
+  db.get(op.key, function (err, val) {
+    op.value = Number(op.value || 0) + Number(val || 0)
+    cb()
+  })
+})
+
+db.put('counter!foo', 1, function (err) {
+  db.put('counter!foo', 2, function (err) {
+    db.get('counter!foo', console.log) //3!
+  })
+})
+
+```
 
 ## API
 
@@ -70,6 +95,16 @@ Post hooks do not offer any chance to change the value.
 but do take a range option, just like `pre`
 
 `db.hooks.post` returns a function that will remove the hook when called.
+
+### rm = db.hooks.async(range?, hook)
+
+Async hooks are another kind of prehook that allow IO to happen
+before the batch/put/del is processed.
+
+Also, async hooked keys are processed strictly in series,
+subsequent calls being queued until the previous call has returned.
+
+This may be an issue for write heavy applications!
 
 ## License
 
