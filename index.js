@@ -1,5 +1,31 @@
 var ranges = require('string-range')
 
+function paraEach(ary, iter, cb) {
+  var n = ary.length, ended
+
+  try {
+    for(var i in ary) {
+      var item = ary[i]
+      console.log('paraEach', item, i)
+      iter(item, i, done)
+    }
+  } catch (err) {
+    if(ended) return
+    cb(ended = err)
+  }
+
+  function done(err, val) {
+    console.log('-- done?', err, n)
+    if(ended) return
+    if(err)   return cb(ended = err)
+    if(--n)   return
+
+    ended = true
+    cb()
+  }
+}
+
+
 module.exports = function (db) {
 
   if(db.hooks) {
@@ -71,64 +97,70 @@ module.exports = function (db) {
   var batch = db.batch
 
   function callHooks (isBatch, b, opts, cb) {
-    try {
-    b.forEach(function hook(e, i) {
-      prehooks.forEach(function (h) {
-        if(h.test(String(e.key))) {
-          //optimize this?
-          //maybe faster to not create a new object each time?
-          //have one object and expose scope to it?
-          var context = {
-            add: function (ch, db) {
-              if(typeof ch === 'undefined') {
+    //iterate over the batch in parallel
+    paraEach(b, function (e, i, done) {
+      ;(function hook (e, i) {
+        //but do each hook in series...
+        prehooks.forEach(function (h) {
+          if(h.test(String(e.key))) {
+            //optimize this?
+            //maybe faster to not create a new object each time?
+            //have one object and expose scope to it?
+            var context = {
+              add: function (ch, db) {
+                if(typeof ch === 'undefined') {
+                  return this
+                }
+                if(ch === false)
+                  return delete b[i]
+                var prefix = (
+                  getPrefix(ch.prefix) || 
+                  getPrefix(db) || 
+                  h.prefix || ''
+                )
+                ch.key = prefix + ch.key
+                if(h.test(String(ch.key))) {
+                  //this usually means a stack overflow.
+                  throw new Error('prehook cannot insert into own range')
+                }
+                b.push(ch)
+                hook(ch, b.length - 1)
                 return this
+              },
+              put: function (ch, db) {
+                if('object' === typeof ch) ch.type = 'put'
+                return this.add(ch, db)
+              },
+              del: function (ch, db) {
+                if('object' === typeof ch) ch.type = 'del'
+                return this.add(ch, db)
+              },
+              veto: function () {
+                return this.add(false)
               }
-              if(ch === false)
-                return delete b[i]
-              var prefix = (
-                getPrefix(ch.prefix) || 
-                getPrefix(db) || 
-                h.prefix || ''
-              )
-              ch.key = prefix + ch.key
-              if(h.test(String(ch.key))) {
-                //this usually means a stack overflow.
-                throw new Error('prehook cannot insert into own range')
-              }
-              b.push(ch)
-              hook(ch, b.length - 1)
-              return this
-            },
-            put: function (ch, db) {
-              if('object' === typeof ch) ch.type = 'put'
-              return this.add(ch, db)
-            },
-            del: function (ch, db) {
-              if('object' === typeof ch) ch.type = 'del'
-              return this.add(ch, db)
-            },
-            veto: function () {
-              return this.add(false)
             }
+            h.hook.call(context, e, context.add)
           }
-          h.hook.call(context, e, context.add)
-        }
-      })
-    })
-    } catch (err) {
-      return (cb || opts)(err)
-    }
-    b = b.filter(function (e) {
-      return e && e.type //filter out empty items
-    })
+        })
+        console.log('DONE', i)
+      })(e, i)
+     done()
+    }, function (err) {
+      if(err)
+        return (cb || opts)(err)
 
-    if(b.length == 1 && !isBatch) {
-      var change = b[0]
-      return change.type == 'put' 
-        ? put.call(db, change.key, change.value, opts, cb) 
-        : del.call(db, change.key, opts, cb)  
-    }
-    return batch.call(db, b, opts, cb)
+      b = b.filter(function (e) {
+        return e && e.type //filter out empty items
+      })
+
+      if(b.length == 1 && !isBatch) {
+        var change = b[0]
+        return change.type == 'put' 
+          ? put.call(db, change.key, change.value, opts, cb) 
+          : del.call(db, change.key, opts, cb)  
+      }
+      return batch.call(db, b, opts, cb)
+    })
   }
 
   db.put = function (key, value, opts, cb ) {
