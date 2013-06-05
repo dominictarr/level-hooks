@@ -46,7 +46,7 @@ to make map-reduce durable across crashes!
 
 ## API
 
-### rm = db.hooks.pre (range?, hook(change, add(change, prefix?)))
+### rm = db.hooks.pre (range?, hook(change, add(op), batch))
 
 If `prefix` is a `string` or `object` that defines the range the pre-hook triggers on.
 If `prefix' is a string, then the hook only triggers on keys that _start_ with that 
@@ -54,11 +54,14 @@ string. If the hook is an object it must be of form `{start: START, end: END}`
 
 `hook` is a function, and will be called on each item in the batch 
 (if it was a `put` or `del`, it will be called on the change)
-`change` is always of the form `{key: key, value: value, type:'put' | 'del'}`
+`op` is always of the form `{key: key, value: value, type:'put' | 'del'}`
 
 Pass additional changes to `add` to add them to the batch.
 If add is passed a string as the second argument it will prepend that prefix
 to any keys you add.
+
+You can check what opperations are currently in the batch with the third argument.
+Do not modify the `batch` directly, instead use `add`
 
 To veto (remove) the current change call `add(false)`.
 
