@@ -19,9 +19,11 @@ rimraf(dir, function () {
 
     Hooks(db)
 
-
-    db.hooks.pre(/^\w/, mac(function (ch, add) {
+    db.hooks.pre(/^\w/, mac(function (ch, add, batch) {
       //iterate backwards so you can push without breaking stuff.
+
+      assert.ok(Array.isArray(batch))
+      assert.notEqual(batch.indexOf(ch), -1)
       var key = ch.key
       add({
         type: 'put', 
