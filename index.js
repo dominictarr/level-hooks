@@ -111,7 +111,7 @@ module.exports = function (db) {
               return this.add(false)
             }
           }
-          h.hook.call(context, e, context.add)
+          h.hook.call(context, e, context.add, b)
         }
       })
     })
