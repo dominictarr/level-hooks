@@ -110,7 +110,6 @@ module.exports = function (db) {
               ch.valueEncoding = ch.valueEncoding || getValueEncoding(ch.prefix)
 
               b.push(ch)
-              console.log(b)
               hook(ch, b.length - 1)
               return this
             },
