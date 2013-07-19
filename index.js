@@ -100,12 +100,9 @@ module.exports = function (db) {
                 getPrefix(db) || 
                 h.prefix || ''
               )
-              console.error('prefix', prefix)
               ch.key = prefix + ch.key
-              console.error('THROW', ch.key, h)
               if(h.test(String(ch.key))) {
                 //this usually means a stack overflow.
-                console.error('THROW', ch.key)
                 throw new Error('prehook cannot insert into own range')
               }
               var ke = ch.keyEncoding   || getKeyEncoding(ch.prefix)
