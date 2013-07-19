@@ -18,6 +18,16 @@ module.exports = function (db) {
       )
   }
 
+  function getKeyEncoding (db) {
+    if(db && db._getKeyEncoding)
+      return db._getKeyEncoding(db)
+  }
+
+  function getValueEncoding (db) {
+    if(db && db._getValueEncoding)
+      return db._getValueEncoding(db)
+  }
+
   function remover (array, item) {
     return function () {
       var i = array.indexOf(item)
@@ -36,7 +46,7 @@ module.exports = function (db) {
     },
     pre: function (prefix, hook) {
       if(!hook) hook = prefix, prefix = ''
-      var h = {test: ranges.checker(prefix), hook: hook}
+      var h = {test: ranges.checker(prefix), hook: hook, prefix: prefix}
       prehooks.push(h)
       return remover(prehooks, h)
     },
@@ -95,7 +105,12 @@ module.exports = function (db) {
                 //this usually means a stack overflow.
                 throw new Error('prehook cannot insert into own range')
               }
+
+              ch.keyEncoding   = ch.keyEncoding   || getKeyEncoding(ch.prefix)
+              ch.valueEncoding = ch.valueEncoding || getValueEncoding(ch.prefix)
+
               b.push(ch)
+              console.log(b)
               hook(ch, b.length - 1)
               return this
             },
