@@ -12,10 +12,10 @@
     "string-range": "~1.2"
   },
   "devDependencies": {
-    "levelup": "~0.8",
     "rimraf": "~2.0.2",
     "macgyver": "~1.9",
-    "range-bucket": "0.0.0"
+    "range-bucket": "0.0.0",
+    "level-test": "~1.4.0"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
