@@ -46,7 +46,7 @@ module.exports = function (db) {
     },
     pre: function (prefix, hook) {
       if(!hook) hook = prefix, prefix = ''
-      var h = {test: ranges.checker(prefix), hook: hook, prefix: prefix}
+      var h = {test: ranges.checker(prefix), hook: hook}
       prehooks.push(h)
       return remover(prehooks, h)
     },
@@ -100,14 +100,18 @@ module.exports = function (db) {
                 getPrefix(db) || 
                 h.prefix || ''
               )
+              console.error('prefix', prefix)
               ch.key = prefix + ch.key
+              console.error('THROW', ch.key, h)
               if(h.test(String(ch.key))) {
                 //this usually means a stack overflow.
+                console.error('THROW', ch.key)
                 throw new Error('prehook cannot insert into own range')
               }
-
-              ch.keyEncoding   = ch.keyEncoding   || getKeyEncoding(ch.prefix)
-              ch.valueEncoding = ch.valueEncoding || getValueEncoding(ch.prefix)
+              var ke = ch.keyEncoding   || getKeyEncoding(ch.prefix)
+              var ve = ch.valueEncoding || getValueEncoding(ch.prefix)
+              if(ke) ch.keyEncoding = ke
+              if(ve) ch.valueEncoding = ve
 
               b.push(ch)
               hook(ch, b.length - 1)
