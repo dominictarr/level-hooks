@@ -99,7 +99,9 @@ module.exports = function (db) {
                 getPrefix(ch.prefix) || 
                 getPrefix(db) || 
                 h.prefix || ''
-              )
+              )  
+              //don't leave a circular json object there incase using multilevel.
+              if(prefix) ch.prefix = prefix
               ch.key = prefix + ch.key
               if(h.test(String(ch.key))) {
                 //this usually means a stack overflow.
