@@ -49,7 +49,7 @@ to make map-reduce durable across crashes!
 ### rm = db.hooks.pre (range?, hook(change, add(op), batch))
 
 If `prefix` is a `string` or `object` that defines the range the pre-hook triggers on.
-If `prefix' is a string, then the hook only triggers on keys that _start_ with that 
+If `prefix` is a string, then the hook only triggers on keys that _start_ with that 
 string. If the hook is an object it must be of form `{start: START, end: END}`
 
 `hook` is a function, and will be called on each item in the batch 
